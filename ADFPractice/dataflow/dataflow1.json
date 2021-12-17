@@ -1,0 +1,51 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_oltp_customer",
+						"type": "DatasetReference"
+					},
+					"name": "customerSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_oltp_PurchaseOrders",
+						"type": "DatasetReference"
+					},
+					"name": "PurchaseOrders"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_targetdb_finalresult",
+						"type": "DatasetReference"
+					},
+					"name": "Destination"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectCustomer"
+				},
+				{
+					"name": "SelectPurchaseOrder"
+				},
+				{
+					"name": "Join1"
+				},
+				{
+					"name": "Filter1"
+				},
+				{
+					"name": "Count"
+				}
+			],
+			"script": "source(output(\n\t\tCustomerCode as string,\n\t\t{ CustomerName} as string,\n\t\t{ Address} as string,\n\t\t{ PhoneNumber} as long\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> customerSource\nsource(output(\n\t\tPurchaseOrderID as string,\n\t\t{ CustomerCode} as string,\n\t\tProductCode as string,\n\t\tEmployeeCode as string,\n\t\t{ PuchaseOrderDate} as string,\n\t\t{ Quantity} as long,\n\t\t{ UnitPrice} as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> PurchaseOrders\ncustomerSource select(mapColumn(\n\t\tCustomerCode,\n\t\t{ CustomerName}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectCustomer\nPurchaseOrders select(mapColumn(\n\t\t{ CustomerCode},\n\t\t{ Quantity}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectPurchaseOrder\nSelectCustomer, SelectPurchaseOrder join(CustomerCode == { CustomerCode},\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> Join1\nJoin1 filter(equals({ CustomerCode},\"1\")) ~> Filter1\nFilter1 aggregate(groupBy(CustomerCode),\n\tcount = sum({ Quantity})) ~> Count\nCount sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tcustomercode as string,\n\t\tcount1 as long\n\t),\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\terrorHandlingOption: 'stopOnFirstError',\n\tmapColumn(\n\t\tcustomercode = CustomerCode,\n\t\tcount1 = count\n\t)) ~> Destination"
+		}
+	}
+}

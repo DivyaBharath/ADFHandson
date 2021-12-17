@@ -1,0 +1,27 @@
+{
+	"name": "DS_targetdb_finalresult",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_TargetDB",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "customercode",
+				"type": "varchar"
+			},
+			{
+				"name": "count1",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "finalresult"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
