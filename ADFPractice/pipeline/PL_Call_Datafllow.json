@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "Data flow1",
+				"description": "This activity calls the dataflow",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
